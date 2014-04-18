@@ -13,7 +13,7 @@ class XMPPLogger
     @host = config['host']
     @username = config['username']
     @password = config['password']
-    @log_dir = File.expand_path(config['log_directory'])
+    @log_directory = File.expand_path(config['log_directory'])
     @rooms = config['rooms']
   end
 
@@ -92,7 +92,7 @@ class XMPPLogger
   end
 
   def log_path(message)
-    File.join(@log_dir, message.from.domain, message.from.node, "#{Date.today.to_s}.txt")
+    File.join(@log_directory, message.from.domain, message.from.node, "#{Date.today.to_s}.txt")
   end
 
   def write_log_entry(attributes, path)
