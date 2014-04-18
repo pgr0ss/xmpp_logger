@@ -19,11 +19,7 @@ class XMPPLogger
 
   def start
     connect
-
-    @client.add_message_callback do |message|
-      direct_message_received(message)
-    end
-
+    listen_to_direct_messages
     join_chat_rooms
 
     Thread.stop
@@ -39,53 +35,46 @@ class XMPPLogger
     @client.send(Jabber::Presence.new.set_type(:available))
   end
 
+  def listen_to_direct_messages
+    @client.add_message_callback do |message|
+      message_received(message)
+    end
+  end
+
   def join_chat_rooms
     @rooms.each do |room|
       Thread.new do
         muc_client = Jabber::MUC::MUCClient.new(@client)
         muc_client.add_message_callback do |message|
-          group_message_received(message)
+          message_received(message)
         end
         muc_client.join("#{room}@conference.braintree.xmpp.slack.com/pg")
       end
     end
   end
 
-  def direct_message_received(message)
-    begin
-      puts message
+  def message_received(message)
+    puts message
+    if message.type == :chat
       log_chat(message)
-    rescue => e
-      puts e.message, e.backtrace
-    end
-  end
-
-  def group_message_received(message)
-    begin
-      puts
-      puts message
-      puts
+    elsif message.type == :groupchat
       log_group_chat(message)
-    rescue => e
-      puts e.message, e.backtrace
+    else
+      puts "Unknown message type: #{message.type}"
     end
+  rescue => e
+    puts e.message, e.backtrace
   end
 
   def log_chat(message)
     attributes = {
       time: Time.now.utc.iso8601,
-      from: message.from.to_s.split('/').first,
+      from: message.from.to_s,
       to: message.to.to_s,
       message: message.body,
     }
 
-    path = chat_log_path(attributes)
-
-    FileUtils.mkdir_p(File.dirname(path))
-
-    File.open(path, 'a') do |file|
-      file.puts(attributes.to_json)
-    end
+    write_log_entry(attributes, log_path(message))
   end
 
   def log_group_chat(message)
@@ -94,31 +83,22 @@ class XMPPLogger
       from: message.from.resource,
     }
 
-    if message.subject
-      attributes.merge!(subject: message.subject)
-    else
-      attributes.merge!(message: message.body)
-    end
+    attributes.merge!(subject: message.subject) if message.subject
+    attributes.merge!(message: message.body) if message.body
 
-    path = group_chat_log_path(message)
+    write_log_entry(attributes, log_path(message))
+  end
 
+  def log_path(message)
+    File.join(@log_dir, message.from.domain, message.from.node, "#{Date.today.to_s}.txt")
+  end
+
+  def write_log_entry(attributes, path)
     FileUtils.mkdir_p(File.dirname(path))
 
     File.open(path, 'a') do |file|
       file.puts(attributes.to_json)
     end
-  end
-
-  def chat_log_path(attributes)
-    from_address = attributes[:from]
-    filename = "#{Date.today.to_s}.txt"
-    File.join(@log_dir, from_address, filename)
-  end
-
-  def group_chat_log_path(message)
-    room_name = message.from.to_s.split('/').first
-    filename = "#{Date.today.to_s}.txt"
-    File.join(@log_dir, room_name, filename)
   end
 end
 
