@@ -1,3 +1,11 @@
 jabber_id: username@jabberserver.com
 password: pass
 log_directory: /tmp/logs
+
+host: example.com
+username: joe
+password: pass
+log_directory: /tmp/logs
+rooms:
+  - dev
+  - random
