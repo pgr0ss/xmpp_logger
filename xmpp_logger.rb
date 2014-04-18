@@ -69,8 +69,8 @@ class XMPPLogger
   def log_chat(message)
     attributes = {
       time: Time.now.utc.iso8601,
-      from: message.from.to_s,
-      to: message.to.to_s,
+      from: message.from.node,
+      to: message.to.node,
       message: message.body,
     }
 
