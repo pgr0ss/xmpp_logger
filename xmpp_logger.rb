@@ -78,6 +78,8 @@ class XMPPLogger
   end
 
   def log_group_chat(message)
+    return if message.subject.nil? && message.body.nil?
+
     attributes = {
       time: Time.now.utc.iso8601,
       from: message.from.resource,
