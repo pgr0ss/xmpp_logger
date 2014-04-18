@@ -48,7 +48,7 @@ class XMPPLogger
         muc_client.add_message_callback do |message|
           message_received(message)
         end
-        muc_client.join("#{room}@conference.braintree.xmpp.slack.com/pg")
+        muc_client.join("#{room}@conference.#{@host}/#{@username}")
       end
     end
   end
