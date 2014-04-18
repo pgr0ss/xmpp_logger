@@ -13,7 +13,7 @@ class XMPPLogger
     @host = config['host']
     @username = config['username']
     @password = config['password']
-    @log_dir = config['log_directory']
+    @log_dir = File.expand_path(config['log_directory'])
     @rooms = config['rooms']
   end
 
