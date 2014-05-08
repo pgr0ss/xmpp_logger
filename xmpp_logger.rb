@@ -80,8 +80,11 @@ class XMPPLogger
   def log_group_chat(message)
     return if message.subject.nil? && message.body.nil?
 
+    delay = message.first_element('delay')
+    timestamp = delay ? Time.parse(delay.attribute("stamp").to_s) : Time.now.utc
+
     attributes = {
-      time: Time.now.utc.iso8601,
+      time: timestamp.iso8601,
       from: message.from.resource,
     }
 
